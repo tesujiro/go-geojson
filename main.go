@@ -6,8 +6,7 @@ import (
 	"reflect"
 )
 
-//TODO: name Kind??
-type ObjectType int
+type memberKind int
 
 const (
 	GeometryObject = iota
@@ -16,7 +15,7 @@ const (
 )
 
 /*
-type GeoJsonType int
+type geoJsonType int
 const (
 	Point = iota
 	MultiPoint
@@ -31,7 +30,7 @@ const (
 */
 
 type Member struct {
-	ObjectType     ObjectType        `json:"-"`
+	memberKind     memberKind
 	Type           string            `json:"type"`
 	CoordinatesRaw json.RawMessage   `json:"coordinates,omitempty"`
 	CoordinatesObj interface{}       `json:"-"`
@@ -100,7 +99,7 @@ func (member *Member) setProperties() error {
 	if err != nil {
 		return fmt.Errorf("%v:%v", err, member)
 	}
-	switch member.ObjectType {
+	switch member.memberKind {
 	case GeometryObject:
 		err := member.setCoordinatesObject()
 		if err != nil {
@@ -122,11 +121,11 @@ func (member *Member) setProperties() error {
 func (member *Member) setObjectType() error {
 	switch member.Type {
 	case "Point", "LineString", "Polygon":
-		member.ObjectType = GeometryObject
+		member.memberKind = GeometryObject
 	case "Feature":
-		member.ObjectType = FeatureObject
+		member.memberKind = FeatureObject
 	case "FeatureCollection":
-		member.ObjectType = FeatureCollectionObject
+		member.memberKind = FeatureCollectionObject
 	default:
 		return fmt.Errorf("Unknown type: %v", member.Type)
 	}
@@ -164,7 +163,7 @@ func (member *Member) setGeometryObject() error {
 }
 
 func (member *Member) String() string {
-	switch member.ObjectType {
+	switch member.memberKind {
 	case GeometryObject:
 		return fmt.Sprintf("type:%v coordinates:%v", member.Type, reflect.ValueOf(member.CoordinatesObj).Elem())
 	case FeatureObject:
@@ -173,6 +172,6 @@ func (member *Member) String() string {
 		//TODO
 		return ""
 	default:
-		return fmt.Sprintf("Unknown Object Type:%v", member.ObjectType)
+		return fmt.Sprintf("Unknown Object Type:%v", member.memberKind)
 	}
 }

@@ -16,7 +16,7 @@ func TestNewMember(t *testing.T) {
 			json: []byte(`{"type": "Point", "coordinates": [1.23, 4.56]}`),
 			ok:   true,
 			expected: &Member{
-				ObjectType:     GeometryObject,
+				memberKind:     GeometryObject,
 				Type:           "Point",
 				CoordinatesRaw: []byte(`[1.23, 4.56]`),
 				CoordinatesObj: &Point{1.23, 4.56},
@@ -26,7 +26,7 @@ func TestNewMember(t *testing.T) {
 			json: []byte(`{"type": "LineString", "coordinates": [[1.23, 4.56],[7.89,10.12]]}`),
 			ok:   true,
 			expected: &Member{
-				ObjectType:     GeometryObject,
+				memberKind:     GeometryObject,
 				Type:           "LineString",
 				CoordinatesRaw: []byte(`[[1.23, 4.56],[7.89,10.12]]`),
 				CoordinatesObj: &LineString{Point{1.23, 4.56}, Point{7.89, 10.12}},
@@ -36,7 +36,7 @@ func TestNewMember(t *testing.T) {
 			json: []byte(`{"type": "Polygon", "coordinates": [[[1.23, 4.56],[7.89,10.12],[3.45,6.78],[1.23,4.56]]]}`),
 			ok:   true,
 			expected: &Member{
-				ObjectType:     GeometryObject,
+				memberKind:     GeometryObject,
 				Type:           "Polygon",
 				CoordinatesRaw: []byte(`[[[1.23, 4.56],[7.89,10.12],[3.45,6.78],[1.23,4.56]]]`),
 				CoordinatesObj: &Polygon{LineString{Point{1.23, 4.56}, Point{7.89, 10.12}, Point{3.45, 6.78}, Point{1.23, 4.56}}},
@@ -46,11 +46,11 @@ func TestNewMember(t *testing.T) {
 			json: []byte(`{"type": "Feature", "geometry": {"type": "Point", "coordinates": [1.23, 4.56]}, "properties": {"name": "point:A"}}`),
 			ok:   true,
 			expected: &Member{
-				ObjectType:  FeatureObject,
+				memberKind:  FeatureObject,
 				Type:        "Feature",
 				GeometryRaw: []byte(`{"type": "Point", "coordinates": [1.23, 4.56]}`),
 				GeometryObj: &Member{
-					ObjectType:     GeometryObject,
+					memberKind:     GeometryObject,
 					Type:           "Point",
 					CoordinatesRaw: []byte(`[1.23, 4.56]`),
 					CoordinatesObj: &Point{1.23, 4.56},
@@ -70,7 +70,7 @@ func TestNewMember(t *testing.T) {
 		if !reflect.DeepEqual(test.expected, m) {
 			fmt.Printf("member:%v\n", m)
 			t.Errorf("json: %s\nexpected: %v\nactual: %v", test.json, test.expected, m)
-			t.Errorf("reflect.DeepEqual(ObjectType):%v\n", reflect.DeepEqual(test.expected.ObjectType, m.ObjectType))
+			t.Errorf("reflect.DeepEqual(memberKind):%v\n", reflect.DeepEqual(test.expected.memberKind, m.memberKind))
 			t.Errorf("reflect.DeepEqual(Type):%v\n", reflect.DeepEqual(test.expected.Type, m.Type))
 			t.Errorf("reflect.DeepEqual(CoordinatesRaw):%v\n", reflect.DeepEqual(test.expected.CoordinatesRaw, m.CoordinatesRaw))
 			t.Errorf("reflect.DeepEqual(CoordinatesObj):%v\n", reflect.DeepEqual(test.expected.CoordinatesObj, m.CoordinatesObj))
