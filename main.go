@@ -14,39 +14,31 @@ const (
 	FeatureCollectionObject
 )
 
-/*
-type geoJsonType int
-const (
-	Point = iota
-	MultiPoint
-	LineString
-	MultiLineString
-	Polygon
-	MultiPolygon
-	GeometryCollection
-	Feature
-	FeatureCollection
-)
-*/
-
 type Member struct {
 	memberKind     memberKind
-	Type           string            `json:"type"`
-	CoordinatesRaw json.RawMessage   `json:"coordinates,omitempty"`
-	CoordinatesObj interface{}       `json:"-"`
-	GeometryRaw    json.RawMessage   `json:"geometry,omitempty"`
-	GeometryObj    *Member           `json:"-"`
-	Properties     map[string]string `json:"properties,omitempty"`
-	//BBox //TODO
+	Type           string          `json:"type"`
+	CoordinatesRaw json.RawMessage `json:"coordinates,omitempty"`
+	CoordinatesObj interface{}     `json:"-"`
+	GeometryRaw    json.RawMessage `json:"geometry,omitempty"`
+	GeometryObj    *Member         `json:"-"`
+	//GeometriesRaw  josn.RawMessage   `json:"geometries,omitempty"`
+	//GeometriesObj  []Member          `json:"-"`
+	Properties map[string]string `json:"properties,omitempty"`
+	//BBox       [4]float64        `json:"bbox,omitempty"`
 }
 
 type Point [2]float64
+type MultiPoint []Point
 
 func (p Point) String() string {
 	return fmt.Sprintf("[%v %v]", p[0], p[1])
 }
 
 type LineString []Point
+type MultiLineString []LineString
+
+type Polygon []LineString
+type MultiPolygon []Polygon
 
 /*
 func (s LineString) String() string {
@@ -63,8 +55,6 @@ func (s LineString) String() string {
 	return fmt.Sprintf("[%v%v]", s[0], helper(s[1:]))
 }
 */
-
-type Polygon []LineString
 
 func NewMember(b []byte) (*Member, error) {
 	var member Member
@@ -99,22 +89,6 @@ func (member *Member) setProperties() error {
 	if err != nil {
 		return fmt.Errorf("%v:%v", err, member)
 	}
-	switch member.memberKind {
-	case GeometryObject:
-		err := member.setCoordinatesObject()
-		if err != nil {
-			return err
-		}
-	case FeatureObject:
-		err := member.setGeometryObject()
-		if err != nil {
-			return err
-		}
-	case FeatureCollectionObject:
-		//TODO
-	default:
-		//TODO
-	}
 	return nil
 }
 
@@ -122,13 +96,29 @@ func (member *Member) setObjectType() error {
 	switch member.Type {
 	case "Point", "LineString", "Polygon":
 		member.memberKind = GeometryObject
+		err := member.setCoordinatesObject()
+		if err != nil {
+			return err
+		}
+	case "MultiPoint", "MultiLineString", "MultiPolygon":
+		member.memberKind = GeometryObject
+		//TODO
+	case "GeometryCollection":
+		member.memberKind = GeometryObject
+		//TODO
 	case "Feature":
 		member.memberKind = FeatureObject
+		err := member.setGeometryObject()
+		if err != nil {
+			return err
+		}
 	case "FeatureCollection":
 		member.memberKind = FeatureCollectionObject
+		//TODO
 	default:
 		return fmt.Errorf("Unknown type: %v", member.Type)
 	}
+
 	return nil
 }
 
